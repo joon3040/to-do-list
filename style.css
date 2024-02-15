@@ -1,6 +1,6 @@
 body{
     margin:0;
-    background-image: url("images/blue-wall-background.jpg")
+    background-image: url("images/blue-wall-background.jpg");
   
 
 }
@@ -36,7 +36,7 @@ body{
 
 .task{
     display: flex;
-    justify-content:space-between; //요소들을 양쪽 끝으로 각각 분리시킴
+    justify-content:space-between;
     padding: 1em;
 }
 
@@ -45,5 +45,5 @@ body{
 }
 
 .task-tabs div{
-    cursor:pointer
+    cursor:pointer;
 }
