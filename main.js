@@ -10,127 +10,156 @@
 //진행 중 탭은 진행중인 아이템만
 //전체 탭을 누르면 다시 전체 아이템으로 돌아옴
 
+
+let userInput = document.querySelector("#userInput")
+let addButton = document.querySelector("#add")
+let tabs = document.querySelectorAll(".tabs div")
 let taskList = []
-let taskStatus = "all"
+let mode = 'all'
+let filterList = []
 
-let taskInput = document.getElementById("task-input")
-let addButton = document.getElementById("add-button")
-let underLine = document.getElementById("under-line")
-let tabs = document.querySelectorAll(".task-tabs div")
-
-for (let i=1; i<tabs.length; i++){
-    tabs[i].addEventListener("click", function(event) {filter(event)})
-}
+const under_line = document.getElementById("under_line");
+let tabLine = document.querySelectorAll(".tabs div")
 
 addButton.addEventListener("click", addTask)
-document.addEventListener("keypress", handleEnterKeyPress)
 
-function randomIDGenerate(){
-    return (Date.now().toString(36) + Math.random().toString(36).substr(2, 5)).toUpperCase()
-}
+checkInput()
+userInput.addEventListener("input", checkInput)
 
-function addTask(){
-    let taskContent = taskInput.value
+tabLine.forEach((menu) => {
+    menu.addEventListener("click", (e) => moveTab(e));
+})
 
-    if (taskInput.value == ""){
-        return;
+function moveTab(e) {
+    const selectedTab = document.querySelector('.selected');
+    if (selectedTab) {
+        selectedTab.classList.remove('selected');
     }
 
+    under_line.style.left = e.currentTarget.offsetLeft + "px"
+    under_line.style.top = e.currentTarget.offsetTop + e.currentTarget.offsetHeight - 10 + "px"
+    under_line.style.width = e.currentTarget.offsetWidth + "px"
+
+    e.currentTarget.classList.add('selected');
+}
+
+for (let i = 1; i < tabs.length; i++) {
+    tabs[i].addEventListener("click", function (event) {
+        filter(event)
+    })
+}
+
+function checkInput() {
+    if (userInput.value == "") {
+        addButton.disabled = true
+    } else {
+        addButton.disabled = false
+    }
+}
+
+function addTask() {
+    // let userInput_value = userInput.value
     let task = {
-        id: randomIDGenerate(),
-        taskContent : taskInput.value,
+        id: newID(),
+        taskContent: userInput.value,
         isComplete: false
     }
-
     taskList.push(task)
-    render(taskStatus)
-
-    taskInput.value = ""
+    userInput.value = ""
+    console.log(taskList)
+    render()
+    checkInput()
 }
 
-function handleEnterKeyPress(event){
-    if (event.which === 13 || event.keyCode === 13){
-        if (!addButton.disabled){
-            addTask()
-        }
+function newID() {
+    return Math.random().toString(36).substr(2, 16);
+}
+
+function render() {
+    let resultHTML = '';
+    List = []
+    if (mode === 'all') {
+        List = taskList
+    } else if (mode === 'ongoing' || mode === 'done') {
+        List = filterList
     }
-}
+    for (let i = 0; i < List.length; i++) {         // 아이템 추가 코드
 
-function render(status){
-    taskStatus = status
-
-    let completeCount = 0
-    let resultHTML = ""
-
-    for (let i = 0; i < taskList.length; i++){
-        if ((taskList[i].isComplete == true)){
-            
-            if (status == "all"|| status == "finish"){
-                resultHTML += `
-                <div  class="task task-area-done">
-                    <div class="task-done">                    
-                        ${taskList[i].taskContent}
-                    </div>
-                    <div>
-                        <button onclick="toggleComplete('${taskList[i].id}')" class="btn btn-light"><i class="fa-solid fa-play"></i></button>
-                        <button onclick="deleteTask('${taskList[i].id}')" id="delete-button" class="btn btn-light"><i class="fa-solid fa-stop"></i></button>
-                    </div>
-                </div>
-                `
-            }
-
-            completeCount++
-        }
-        else if ((taskList[i].isComplete != true) && (status == "all"|| status == "ongoing")) {
+        if (List[i].isComplete == true) {
             resultHTML += `
-            <div class="task">
-                <div>                    
-                    ${taskList[i].taskContent}
-                </div>
-                <div>
-                    <button onclick="toggleComplete('${taskList[i].id}')" class="btn btn-light"><i class="fa-solid fa-pause"></i></button>
-                    <button onclick="deleteTask('${taskList[i].id}')" id="delete-button" class="btn btn-light"><i class="fa-solid fa-stop"></i></button>
-                </div>
+            <div class="tasks">
+            <div class="content task-done">${List[i].taskContent}</div>
+            <div>
+                <button onclick="toggle('${List[i].id}')"><img src="./image/done_box.png"></button>            <!--클릭되는 아이디를 확인하기 위해 id값 넘기기-->
+                <button onclick="deleteTask('${List[i].id}')"><img src="./image/delete.png"></button>
             </div>
-            `
+        </div>`
+        } else {
+            resultHTML += `
+            <div class="tasks">
+            <div class="content">${List[i].taskContent}</div>
+            <div>
+                <button onclick="toggle('${List[i].id}')"><img src="./image/going_box.png"></button>            <!--클릭되는 아이디를 확인하기 위해 id값 넘기기-->
+                <button onclick="deleteTask('${List[i].id}')"><img src="./image/delete.png"></button>
+            </div>
+        </div>`
         }
     }
     document.getElementById("task-board").innerHTML = resultHTML
-    
 }
 
-function toggleComplete(id){
-    for (let i = 0; i < taskList.length; i++){
-        if (taskList[i].id == id){
-            taskList[i].isComplete = !taskList[i].isComplete;
-            break;
+
+function toggle(id) {
+    for (let i of taskList) {
+        if (i.id == id) {
+            i.isComplete = !i.isComplete
+            break;          // for 문 종료
         }
     }
-
-    render(taskStatus)
+    filter()
 }
 
-function deleteTask(id){
-    for (let i = 0; i < taskList.length; i++){
-        if (taskList[i].id == id){
+function deleteTask(id) {
+    for (let i = 0; i < taskList.length; i++) {
+        if (taskList[i].id == id) {
             taskList.splice(i, 1)
             break;
         }
     }
-
-    render(taskStatus)
+    filter()
 }
 
-function filter(event){
-    if (event.target.id == "all"){
-        underLine.style.left = "0px"
-    }
-    else if (event.target.id == "ongoing"){
-        underLine.style.left = "75px"
-    }
-    else {
-        underLine.style.left = "150px"
+
+function filter(event) {
+
+    if (event) {
+        mode = event.target.id
     }
 
-    render(event.target.id)
+    filterList = []
+
+    if (mode == 'all') {
+        render()        // 전체 리스트 출력
+    } else if (mode == 'ongoing') {
+        for (let i = 0; i < taskList.length; i++) {
+            if (taskList[i].isComplete == false) {
+                filterList.push(taskList[i])
+            }
+        }
+        render()
+    } else if (mode == 'done') {
+        for (let i = 0; i < taskList.length; i++) {
+            if (taskList[i].isComplete == true) {
+                filterList.push(taskList[i])
+            }
+        }
+        render()
+    }
 }
+
+userInput.addEventListener("keypress", (e) => {
+    if (e.key == "Enter") {
+        e.preventDefault();
+        addButton.click()
+    }
+})
